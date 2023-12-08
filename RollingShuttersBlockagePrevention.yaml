@@ -1,0 +1,109 @@
+blueprint:
+  name: Rolling shutters blockage prevention
+  description: This blueprint is based on three magnet sensors, one at each side (at the last step) of the shutter and one at the bottom. if one of the sides closes before the other the window will open and a message is sent
+  domain: automation
+  source_url: https://github.com/user/repo/blob/main/blueprints/automation/shamirat_chalon_pinat_ochel.yaml
+  input:
+    window_sensor_right:
+      name: window sensor right
+      description: Choose the sensor you had placed at the right hand side of the window
+      selector:
+        entity:
+          domain: binary_sensor
+    window_sensor_left:
+      name: window sensor left
+      description: Choose the sensor you had placed at the left hand side of the window
+      selector:
+        entity:
+          domain: binary_sensor
+    window_sensor_buttom:
+      name: window sensor left
+      description: Choose the sensor you had placed at the left hand side of the window
+      selector:
+        entity:
+          domain: binary_sensor
+    shutter_cover:
+      name: shutter
+      description: Choose the shutter you want to keep from blocking
+      selector:
+        entity:
+          domain: cover
+    notification_service:
+      name: notification
+      description: Choose who will be notified when the window is blocked
+      selector:
+        text:
+          type: search
+          multiline: false
+          multiple: false
+    notification_message:
+      name: notification message
+      description: What should the message say?
+      default: Somthing is preventing the window from closing!
+      selector:
+        text:
+    notification_title:
+      name: notification title
+      description: What should the notification title be?
+      default: the window is blocked!
+      selector:
+        text:
+
+mode: restart
+max_exceeded: silent
+trigger:
+  - platform: state
+    entity_id:
+      - !input window_sensor_right
+      - !input window_sensor_left
+      - !input window_sensor_buttom
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+condition:
+  - condition: or
+    conditions:
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: !input window_sensor_right
+            state: "off"
+          - condition: state
+            entity_id: !input window_sensor_left
+            state: "on"
+          - condition: state
+            entity_id: !input window_sensor_buttom
+            state: "on"
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: !input window_sensor_left
+            state: "off"
+          - condition: state
+            entity_id: !input window_sensor_right
+            state: "on"
+          - condition: state
+            entity_id: !input window_sensor_buttom
+            state: "on"
+action:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 500
+  - if:
+      - condition: state
+        entity_id: !input window_sensor_buttom
+        state: "on"
+    then:
+      - service: cover.open_cover
+        data: {}
+        target:
+          entity_id: !input shutter_cover
+      - service: !input notification_service
+        data:
+          message: !input notification_message
+          title: !input notification_title
