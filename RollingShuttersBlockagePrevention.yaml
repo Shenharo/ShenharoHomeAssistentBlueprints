@@ -92,8 +92,8 @@ action:
   - delay:
       hours: 0
       minutes: 0
-      seconds: 0
-      milliseconds: 500
+      seconds: 2
+      milliseconds: 0
   - if:
       - condition: state
         entity_id: !input window_sensor_buttom
